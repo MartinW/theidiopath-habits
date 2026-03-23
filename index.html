@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#F2BFBF">
+<title>HABITS. — The Idiopath</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   CSS RESET & VARIABLES
+   ═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #F2BFBF;
+  --bg-deep: #E8ABAB;
+  --accent: #E63028;
+  --accent-dark: #C4221B;
+  --black: #0A0A0A;
+  --white: #FFFFFF;
+  --white-off: #FFF9F9;
+  --gray: #8A7575;
+  --gray-light: #C4AEAE;
+  --checklist-bg: #111111;
+  --card-radius: 20px;
+  --input-radius: 16px;
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, sans-serif;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --progress-height: 3px;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--black);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ═══════════════════════════════════════════
+   APP SHELL
+   ═══════════════════════════════════════════ */
+#app {
+  position: relative;
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════
+   TOP PROGRESS BAR
+   ═══════════════════════════════════════════ */
+.progress-bar-container {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  z-index: 100;
+  padding-top: var(--safe-top);
+  background: rgba(242, 191, 191, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.progress-bar-inner {
+  padding: 12px 20px 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-back {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(10,10,10,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.progress-back:active { transform: scale(0.9); background: rgba(10,10,10,0.15); }
+.progress-back svg { width: 18px; height: 18px; }
+
+.progress-dots {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  justify-content: center;
+}
+
+.progress-dot {
+  width: 100%;
+  height: var(--progress-height);
+  border-radius: 2px;
+  background: rgba(10,10,10,0.12);
+  transition: background 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+.progress-dot.completed { background: var(--accent); }
+.progress-dot.current {
+  background: rgba(10,10,10,0.12);
+}
+.progress-dot.current::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 50%;
+  background: var(--accent);
+  border-radius: 2px;
+  animation: progressPulse 2s ease-in-out infinite;
+}
+@keyframes progressPulse {
+  0%, 100% { width: 30%; opacity: 0.7; }
+  50% { width: 70%; opacity: 1; }
+}
+
+.progress-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  min-width: 32px;
+  text-align: right;
+}
+
+/* ═══════════════════════════════════════════
+   SCREENS
+   ═══════════════════════════════════════════ */
+.screen {
+  display: none;
+  min-height: 100dvh;
+  padding-bottom: calc(100px + var(--safe-bottom));
+  animation: screenIn 0.5s ease;
+}
+.screen.active { display: block; }
+
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════
+   DASHBOARD
+   ═══════════════════════════════════════════ */
+.dashboard {
+  padding: calc(20px + var(--safe-top)) 20px 40px;
+}
+
+.dash-header {
+  margin-bottom: 40px;
+  padding-top: 20px;
+}
+
+.dash-brand {
+  font-family: var(--font-display);
+  font-size: 42px;
+  line-height: 1;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+.dash-brand .dot { color: var(--accent); }
+
+.dash-subtitle {
+  font-size: 15px;
+  color: var(--gray);
+  font-weight: 400;
+  margin-top: 6px;
+}
+
+/* Progress Ring */
+.dash-progress {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--white);
+  border-radius: var(--card-radius);
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+}
+
+.progress-ring-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+}
+
+.progress-ring {
+  transform: rotate(-90deg);
+  width: 72px;
+  height: 72px;
+}
+
+.progress-ring-bg {
+  fill: none;
+  stroke: rgba(10,10,10,0.06);
+  stroke-width: 5;
+}
+
+.progress-ring-fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 188.5;
+  stroke-dashoffset: 188.5;
+  transition: stroke-dashoffset 1s ease;
+}
+
+.progress-ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--black);
+}
+
+.dash-progress-info h3 {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.dash-progress-info p {
+  font-size: 13px;
+  color: var(--gray);
+  line-height: 1.4;
+}
+
+/* Module Cards */
+.dash-modules-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gray);
+  margin-bottom: 16px;
+  padding-left: 4px;
+}
+
+.module-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  background: var(--white);
+  border-radius: 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.03);
+  -webkit-tap-highlight-color: transparent;
+}
+.module-card:active { transform: scale(0.98); background: var(--white-off); }
+.module-card.locked { opacity: 0.45; pointer-events: none; }
+.module-card.completed { opacity: 0.7; }
+
+.module-num {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 16px;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+.module-card.completed .module-num {
+  background: var(--accent);
+  color: var(--white);
+}
+.module-card.current .module-num {
+  background: var(--black);
+  color: var(--white);
+}
+
+.module-info { flex: 1; min-width: 0; }
+
+.module-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 2px;
+}
+
+.module-meta {
+  font-size: 12px;
+  color: var(--gray);
+}
+
+.module-arrow {
+  width: 20px;
+  height: 20px;
+  color: var(--gray-light);
+  flex-shrink: 0;
+}
+.module-card.completed .module-arrow { color: var(--accent); }
+
+/* Weekly Check-in Card */
+.weekly-card {
+  margin-top: 24px;
+  background: var(--checklist-bg);
+  border-radius: var(--card-radius);
+  padding: 24px;
+  color: var(--white);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.weekly-card:active { transform: scale(0.98); }
+.weekly-card::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.15;
+}
+
+.weekly-card h3 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  margin-bottom: 6px;
+  position: relative;
+}
+.weekly-card p {
+  font-size: 13px;
+  opacity: 0.6;
+  position: relative;
+}
+.weekly-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 14px;
+  position: relative;
+}
+.weekly-streak .fire { font-size: 16px; }
+
+/* ═══════════════════════════════════════════
+   MODULE VIEW
+   ═══════════════════════════════════════════ */
+.module-screen {
+  padding: calc(70px + var(--safe-top)) 20px 40px;
+}
+
+.module-header {
+  margin-bottom: 32px;
+}
+
+.module-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.module-heading {
+  font-family: var(--font-display);
+  font-size: 36px;
+  line-height: 1.1;
+  letter-spacing: -0.3px;
+}
+.module-heading .dot { color: var(--accent); }
+
+.module-body-text {
+  font-size: 15px;
+  line-height: 1.65;
+  color: rgba(10,10,10,0.75);
+  margin-bottom: 28px;
+  font-weight: 400;
+}
+.module-body-text strong {
+  color: var(--black);
+  font-weight: 600;
+}
+
+/* Content Sections */
+.content-section {
+  margin-bottom: 28px;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: sectionReveal 0.6s ease forwards;
+}
+.content-section:nth-child(1) { animation-delay: 0.1s; }
+.content-section:nth-child(2) { animation-delay: 0.2s; }
+.content-section:nth-child(3) { animation-delay: 0.3s; }
+.content-section:nth-child(4) { animation-delay: 0.35s; }
+.content-section:nth-child(5) { animation-delay: 0.4s; }
+.content-section:nth-child(6) { animation-delay: 0.45s; }
+.content-section:nth-child(7) { animation-delay: 0.5s; }
+
+@keyframes sectionReveal {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════
+   FREE TEXT INPUT CARDS
+   ═══════════════════════════════════════════ */
+.text-card {
+  background: var(--white);
+  border-radius: var(--input-radius);
+  padding: 20px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+  transition: box-shadow 0.3s;
+}
+.text-card:focus-within {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 0 0 2px rgba(230,48,40,0.15);
+}
+
+.text-card-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray);
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.text-card textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--black);
+  background: transparent;
+  min-height: 80px;
+  overflow: hidden;
+}
+.text-card textarea::placeholder {
+  color: var(--gray-light);
+  font-style: italic;
+}
+
+.text-card-saved {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+  margin-top: 8px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.text-card-saved.show { opacity: 1; }
+.text-card-saved svg { width: 12px; height: 12px; }
+
+/* ═══════════════════════════════════════════
+   CHECKLIST BLOCKS
+   ═══════════════════════════════════════════ */
+.checklist-block {
+  background: var(--checklist-bg);
+  border-radius: var(--input-radius);
+  padding: 20px;
+  color: var(--white);
+}
+
+.checklist-label {
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0.6;
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+.checklist-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s;
+}
+.checklist-option:last-child { border-bottom: none; }
+.checklist-option:active { opacity: 0.7; }
+
+.check-box {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 2px solid rgba(255,255,255,0.25);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.checklist-option.checked .check-box {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.check-box svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.2s;
+}
+.checklist-option.checked .check-box svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.check-label {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+/* ═══════════════════════════════════════════
+   QUOTE CARDS
+   ═══════════════════════════════════════════ */
+.quote-card {
+  position: relative;
+  padding: 28px 24px 24px;
+  margin-bottom: 0;
+}
+
+.quote-marks {
+  font-size: 52px;
+  line-height: 1;
+  color: var(--accent);
+  font-family: var(--font-display);
+  margin-bottom: -8px;
+  display: block;
+}
+
+.quote-text {
+  font-family: var(--font-display);
+  font-size: 22px;
+  line-height: 1.35;
+  color: var(--black);
+}
+.quote-text .dot { color: var(--accent); }
+
+/* Dark quote variant */
+.quote-card.dark {
+  background: var(--checklist-bg);
+  border-radius: var(--card-radius);
+  padding: 32px 24px;
+}
+.quote-card.dark .quote-marks { color: var(--bg); opacity: 0.5; }
+.quote-card.dark .quote-text { color: var(--white); }
+
+/* ═══════════════════════════════════════════
+   IDEAL / MINIMUM VERSION VISUAL
+   ═══════════════════════════════════════════ */
+.version-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.version-circle {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--black);
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.2;
+  padding: 12px;
+}
+.version-circle.small {
+  width: 90px;
+  height: 90px;
+  font-size: 14px;
+}
+
+.version-arrows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--black);
+}
+.version-arrows svg { width: 24px; height: 24px; }
+
+/* ═══════════════════════════════════════════
+   FIVE PILLARS
+   ═══════════════════════════════════════════ */
+.pillars-row {
+  display: flex;
+  gap: 8px;
+  margin: 24px 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.pillars-row::-webkit-scrollbar { display: none; }
+
+.pillar-chip {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 14px 14px;
+  border-radius: 16px;
+  background: rgba(10,10,10,0.04);
+  min-width: 88px;
+  transition: all 0.3s;
+}
+.pillar-chip.active {
+  background: var(--accent);
+  color: var(--white);
+}
+
+.pillar-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(10,10,10,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.pillar-chip.active .pillar-icon {
+  background: rgba(255,255,255,0.2);
+}
+
+.pillar-name {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* ═══════════════════════════════════════════
+   BOTTOM CTA BAR
+   ═══════════════════════════════════════════ */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  z-index: 100;
+  padding: 12px 20px calc(12px + var(--safe-bottom));
+  background: linear-gradient(to top, var(--bg) 60%, transparent);
+}
+
+.btn-continue {
+  width: 100%;
+  height: 56px;
+  border: none;
+  border-radius: 16px;
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-continue:active {
+  transform: scale(0.97);
+  background: #222;
+}
+.btn-continue svg { width: 18px; height: 18px; }
+
+.btn-continue.accent {
+  background: var(--accent);
+}
+.btn-continue.accent:active { background: var(--accent-dark); }
+
+/* ═══════════════════════════════════════════
+   WEEKLY CHECK-IN SCREEN
+   ═══════════════════════════════════════════ */
+.weekly-screen {
+  padding: calc(70px + var(--safe-top)) 20px 40px;
+}
+
+.weekly-date {
+  font-size: 13px;
+  color: var(--gray);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.weekly-history {
+  margin-top: 32px;
+}
+
+.weekly-history-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gray);
+  margin-bottom: 14px;
+}
+
+.history-entry {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.03);
+}
+.history-entry-date {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.history-entry p {
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(10,10,10,0.7);
+}
+.history-entry p + p { margin-top: 6px; }
+
+/* ═══════════════════════════════════════════
+   CTA UPSELL CARD
+   ═══════════════════════════════════════════ */
+.upsell-card {
+  background: var(--white);
+  border-radius: var(--card-radius);
+  padding: 28px 24px;
+  text-align: center;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  border: 2px solid rgba(230,48,40,0.15);
+}
+
+.upsell-card h3 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+.upsell-card p {
+  font-size: 14px;
+  color: var(--gray);
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+.upsell-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: var(--accent);
+  color: var(--white);
+  border: none;
+  border-radius: 14px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.upsell-btn:active { transform: scale(0.96); background: var(--accent-dark); }
+
+/* ═══════════════════════════════════════════
+   RED BOTTOM ACCENT LINE
+   ═══════════════════════════════════════════ */
+.accent-line {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  height: 4px;
+  background: var(--accent);
+  z-index: 200;
+}
+
+/* ═══════════════════════════════════════════
+   TOAST NOTIFICATION
+   ═══════════════════════════════════════════ */
+.toast {
+  position: fixed;
+  top: calc(70px + var(--safe-top));
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--checklist-bg);
+  color: var(--white);
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ═══════════════════════════════════════════
+   DESKTOP FRAME
+   ═══════════════════════════════════════════ */
+@media (min-width: 500px) {
+  body {
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #app {
+    border-radius: 40px;
+    box-shadow: 0 0 0 8px #111, 0 20px 60px rgba(0,0,0,0.4);
+    height: 100dvh;
+    max-height: 932px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .progress-bar-container,
+  .bottom-bar {
+    border-radius: 0;
+  }
+  .accent-line {
+    border-radius: 0 0 40px 40px;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════════ */
+#app::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- ACCENT LINE -->
+  <div class="accent-line"></div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast">Saved</div>
+
+  <!-- ════════════════════════════════════
+       SCREEN: DASHBOARD
+       ════════════════════════════════════ -->
+  <div class="screen active" id="screen-dashboard">
+    <div class="dashboard">
+      <div class="dash-header">
+        <h1 class="dash-brand">HABITS<span class="dot">.</span></h1>
+        <p class="dash-subtitle">Small actions compound</p>
+      </div>
+
+      <!-- Progress Ring -->
+      <div class="dash-progress">
+        <div class="progress-ring-wrap">
+          <svg class="progress-ring" viewBox="0 0 72 72">
+            <circle class="progress-ring-bg" cx="36" cy="36" r="30"/>
+            <circle class="progress-ring-fill" id="dashRingFill" cx="36" cy="36" r="30"/>
+          </svg>
+          <div class="progress-ring-text" id="dashRingText">0%</div>
+        </div>
+        <div class="dash-progress-info">
+          <h3 id="dashProgressTitle">Start your journey</h3>
+          <p id="dashProgressSub">9 modules to build one resilient habit</p>
+        </div>
+      </div>
+
+      <!-- Modules -->
+      <p class="dash-modules-label">Modules</p>
+      <div id="moduleList"></div>
+
+      <!-- Weekly Check-in -->
+      <div class="weekly-card" id="weeklyCard" onclick="openWeekly()">
+        <h3>Reflection Check-In<span class="dot">.</span></h3>
+        <p>Weekly journal — revisit anytime</p>
+        <div class="weekly-streak">
+          <span class="fire">&#x1F525;</span>
+          <span id="streakCount">0 week streak</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       SCREEN: MODULE VIEW
+       ════════════════════════════════════ -->
+  <div class="screen" id="screen-module">
+    <!-- Progress Bar -->
+    <div class="progress-bar-container">
+      <div class="progress-bar-inner">
+        <button class="progress-back" onclick="goToDashboard()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="progress-dots" id="progressDots"></div>
+        <span class="progress-label" id="progressLabel">1/9</span>
+      </div>
+    </div>
+
+    <!-- Module Content (dynamic) -->
+    <div class="module-screen" id="moduleContent"></div>
+
+    <!-- Bottom CTA -->
+    <div class="bottom-bar">
+      <button class="btn-continue" id="btnContinue" onclick="nextModule()">
+        Continue
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       SCREEN: WEEKLY CHECK-IN
+       ════════════════════════════════════ -->
+  <div class="screen" id="screen-weekly">
+    <div class="progress-bar-container">
+      <div class="progress-bar-inner">
+        <button class="progress-back" onclick="goToDashboard()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div style="flex:1"></div>
+        <span class="progress-label" style="font-size:12px;letter-spacing:0.3px;text-transform:none;">Check-in</span>
+      </div>
+    </div>
+
+    <div class="weekly-screen" id="weeklyContent"></div>
+
+    <div class="bottom-bar">
+      <button class="btn-continue accent" onclick="saveWeekly()">
+        Save Check-In
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA: All 9 Modules
+// ═══════════════════════════════════════════
+const MODULES = [
+  {
+    id: 1,
+    eyebrow: 'Module 1',
+    title: 'Your intention',
+    meta: 'Welcome & intention setting',
+    content: `<p class="module-body-text">Today is about building habits that respect real life. Take a moment to ground yourself.</p>
+<p class="module-body-text">This course is built on <strong>The Idiopath Five Pillars of Resilience</strong>. Habits is one of them &mdash; the pillar of identity, momentum, and progress.</p>`,
+    pillars: true,
+    sections: [
+      { type: 'text', label: 'Today is about building habits that respect real life. Take a moment to ground yourself.', placeholder: 'Why did you come to this? What brought you here?' },
+      { type: 'checklist', label: 'How do you want to feel when you finish this practice?', options: ['Clear', 'Hopeful', 'Supported', 'Calm', 'Empowered', 'Other'] },
+      { type: 'quote', text: 'This is designed to support you and to be reused in real life, long after today. There are no perfect answers. This is about honesty and flexibility.' }
+    ]
+  },
+  {
+    id: 2,
+    eyebrow: 'Module 2',
+    title: 'Why habits are hard',
+    meta: 'Understanding failure patterns',
+    content: `<p class="module-body-text">Habits fail for predictable reasons: relying on <strong>motivation instead of consistency</strong>, falling into <strong>all-or-nothing thinking</strong>, and expecting habits to survive every single day.</p>
+<p class="module-body-text">Understanding why you've struggled before isn't about blame &mdash; it's about clarity.</p>`,
+    sections: [
+      { type: 'text', label: 'Think of one habit you tried to build but didn\'t sustain.', placeholder: 'What was the habit?' },
+      { type: 'checklist', label: 'What do you think got in the way?', options: ['Time', 'Energy', 'Motivation', 'All-or-nothing thinking', 'Life getting messy', 'It was too big / too rigid'] },
+      { type: 'text', label: 'What can you notice about this without judging yourself?', placeholder: 'Write honestly\u2026' }
+    ]
+  },
+  {
+    id: 3,
+    eyebrow: 'Module 3',
+    title: 'How habits really work',
+    meta: 'Identity, environment & compounding',
+    content: `<p class="module-body-text"><strong>Habits don't fail because you don't care.</strong> They fail when they aren't built with resilience.</p>
+<p class="module-body-text">Real habits are <strong>identity-led</strong> &mdash; behaviour follows environment, and small actions compound over time.</p>`,
+    sections: [
+      { type: 'text', label: 'When I try to rely on motivation, my habits usually\u2026', placeholder: 'Be honest about the pattern\u2026' },
+      { type: 'text', label: 'When life gets hard, I tend to\u2026', placeholder: 'Notice, don\'t judge\u2026' },
+      { type: 'quote', text: 'Small actions done consistently still count.' }
+    ]
+  },
+  {
+    id: 4,
+    eyebrow: 'Module 4',
+    title: 'Identity & becoming',
+    meta: 'Who you\'re becoming',
+    content: `<p class="module-body-text"><strong>Habits are not just about what you do &mdash; they're about who you're becoming.</strong></p>
+<p class="module-body-text">When you connect a habit to your identity, it stops being a task and starts being a vote for the person you want to be.</p>`,
+    sections: [
+      { type: 'text', label: 'If this habit were part of your identity, who would you be becoming?', placeholder: '"I am someone who\u2026"' },
+      { type: 'text', label: 'How would that version of you treat hard days differently?', placeholder: 'Think about compassion, not perfection\u2026' }
+    ]
+  },
+  {
+    id: 5,
+    eyebrow: 'Module 5',
+    title: 'Build one habit',
+    meta: 'Focus on one thing',
+    content: `<p class="module-body-text">We build momentum by <strong>focusing on one thing at a time</strong>. Not five habits. Not a whole new lifestyle. Just one.</p>`,
+    sections: [
+      { type: 'text', label: 'The habit I am choosing to work on is:', placeholder: 'Name one habit\u2026' },
+      { type: 'text', label: 'Why does this habit matter to me? (Not why it should.)', placeholder: 'Your real reason\u2026' },
+      { type: 'checklist', label: 'What typically makes this habit hard to sustain?', options: ['Low energy', 'Overwhelm', 'Time pressure', 'Emotional load', 'Forgetting', 'Unrealistic expectations'] },
+      { type: 'text', label: 'When this shows up, what do I usually do?', placeholder: 'Your default response\u2026' }
+    ]
+  },
+  {
+    id: 6,
+    eyebrow: 'Module 6',
+    title: 'The minimum version rule',
+    meta: 'Ideal vs minimum',
+    content: `<p class="module-body-text"><strong>The intention stays the same. The version changes.</strong></p>
+<p class="module-body-text">On good days, you do the ideal version. On hard days, you do the minimum. Both count.</p>`,
+    versionVisual: true,
+    sections: [
+      { type: 'text', label: 'My ideal version of this habit looks like:', placeholder: 'The full version on a great day\u2026' },
+      { type: 'text', label: 'My minimum version (the version I can do on hard days) is:', placeholder: 'The smallest version that still counts\u2026' },
+      { type: 'quote', text: 'If the minimum version feels too easy, that\'s the point.' }
+    ]
+  },
+  {
+    id: 7,
+    eyebrow: 'Module 7',
+    title: 'Energy & habit protection',
+    meta: 'Protecting consistency',
+    content: `<p class="module-body-text"><strong>Habits don't fail, energy does.</strong> Protecting your energy protects your consistency.</p>`,
+    sections: [
+      { type: 'text', label: 'What tends to drain my energy before I even begin?', placeholder: 'Identify the drains\u2026' },
+      { type: 'text', label: 'One small boundary or adjustment I could make this week is:', placeholder: 'Something realistic\u2026' },
+      { type: 'text', label: 'How might this protect my habit?', placeholder: 'Connect the dots\u2026' }
+    ]
+  },
+  {
+    id: 8,
+    eyebrow: 'Module 8',
+    title: 'Make it easy to start',
+    meta: 'Removing friction',
+    content: `<p class="module-body-text"><strong>We're not aiming to be impressive. We're aiming to begin.</strong></p>`,
+    sections: [
+      { type: 'checklist', label: 'What will make this habit easier to start tomorrow?', options: ['Reduce the time required', 'Attach it to something I already do', 'Prepare in advance', 'Lower expectations', 'Ask for support', 'Other'] },
+      { type: 'text', label: 'My plan to make it easy starts with\u2026', placeholder: 'One concrete step\u2026' }
+    ]
+  },
+  {
+    id: 9,
+    eyebrow: 'Module 9',
+    title: 'Your commitment',
+    meta: 'Flexible, not rigid',
+    content: `<p class="module-body-text"><strong>Flexible, not rigid.</strong> Your commitment isn't about being perfect &mdash; it's about returning to your intention, again and again.</p>`,
+    sections: [
+      { type: 'text', label: 'When things don\'t go to plan, I will remind myself:', placeholder: 'Your anchor thought\u2026' },
+      { type: 'quote-dark', text: 'Resilience isn\'t built in dramatic moments. It\'s built every time you choose\u2026 "I\'ll do something, even if it\'s small." Your habits don\'t need perfection. They need permission to be human.' },
+      { type: 'upsell' }
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let state = {
+  currentModule: 0,  // 0 = dashboard
+  completedModules: [],
+  answers: {},       // { "m1_text_0": "...", "m1_check_1": [0,2], ... }
+  weeklyEntries: []
+};
+
+// Load from localStorage
+function loadState() {
+  const saved = localStorage.getItem('habits_state');
+  if (saved) {
+    try { state = JSON.parse(saved); } catch(e) {}
+  }
+}
+function saveState() {
+  localStorage.setItem('habits_state', JSON.stringify(state));
+}
+
+// ═══════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════
+
+function renderDashboard() {
+  const list = document.getElementById('moduleList');
+  const completedCount = state.completedModules.length;
+
+  // Progress ring
+  const pct = Math.round((completedCount / 9) * 100);
+  const ring = document.getElementById('dashRingFill');
+  const circumference = 2 * Math.PI * 30;
+  ring.style.strokeDashoffset = circumference - (pct / 100) * circumference;
+  document.getElementById('dashRingText').textContent = pct + '%';
+
+  const titleEl = document.getElementById('dashProgressTitle');
+  const subEl = document.getElementById('dashProgressSub');
+  if (completedCount === 0) {
+    titleEl.textContent = 'Start your journey';
+    subEl.textContent = '9 modules to build one resilient habit';
+  } else if (completedCount < 9) {
+    titleEl.textContent = `${completedCount} of 9 complete`;
+    subEl.textContent = 'Keep going \u2014 small actions compound';
+  } else {
+    titleEl.textContent = 'Course complete';
+    subEl.textContent = 'Use weekly check-ins to stay on track';
+  }
+
+  // Module cards
+  list.innerHTML = MODULES.map((m, i) => {
+    const isCompleted = state.completedModules.includes(m.id);
+    const isCurrent = !isCompleted && (i === 0 || state.completedModules.includes(MODULES[i-1].id));
+    const isLocked = !isCompleted && !isCurrent;
+
+    let statusClass = '';
+    if (isCompleted) statusClass = 'completed';
+    else if (isCurrent) statusClass = 'current';
+    else statusClass = 'locked';
+
+    const checkSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg>`;
+    const arrowSvg = `<svg class="module-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>`;
+    const lockSvg = `<svg class="module-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 118 0v4"/></svg>`;
+
+    return `
+      <div class="module-card ${statusClass}" onclick="${isLocked ? '' : `openModule(${m.id})`}">
+        <div class="module-num">${isCompleted ? checkSvg : m.id}</div>
+        <div class="module-info">
+          <div class="module-title">${m.title}<span class="dot" style="color:var(--accent)">.</span></div>
+          <div class="module-meta">${m.meta}</div>
+        </div>
+        ${isLocked ? lockSvg : arrowSvg}
+      </div>
+    `;
+  }).join('');
+
+  // Weekly
+  const streakEl = document.getElementById('streakCount');
+  streakEl.textContent = state.weeklyEntries.length + ' week streak';
+}
+
+function renderModule(moduleId) {
+  const m = MODULES.find(x => x.id === moduleId);
+  const container = document.getElementById('moduleContent');
+
+  let html = `
+    <div class="module-header">
+      <div class="module-eyebrow">${m.eyebrow}</div>
+      <h2 class="module-heading">${m.title}<span class="dot">.</span></h2>
+    </div>
+    ${m.content}
+  `;
+
+  // Five pillars
+  if (m.pillars) {
+    html += `
+      <div class="pillars-row">
+        <div class="pillar-chip"><div class="pillar-icon">\u270A</div><div class="pillar-name">Show Up</div></div>
+        <div class="pillar-chip"><div class="pillar-icon">\u26A1</div><div class="pillar-name">Adapt</div></div>
+        <div class="pillar-chip"><div class="pillar-icon">\uD83D\uDEE1\uFE0F</div><div class="pillar-name">Protect</div></div>
+        <div class="pillar-chip active"><div class="pillar-icon">\uD83C\uDFAF</div><div class="pillar-name">Habits</div></div>
+        <div class="pillar-chip"><div class="pillar-icon">\uD83E\uDDD8</div><div class="pillar-name">Alignment</div></div>
+      </div>
+    `;
+  }
+
+  // Version visual
+  if (m.versionVisual) {
+    html += `
+      <div class="version-visual">
+        <div class="version-circle">Ideal<br>Version</div>
+        <div class="version-arrows">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7"/></svg>
+        </div>
+        <div class="version-circle small">Minimum<br>Version</div>
+      </div>
+    `;
+  }
+
+  // Interactive sections
+  m.sections.forEach((section, i) => {
+    const key = `m${m.id}_${section.type}_${i}`;
+    html += `<div class="content-section">`;
+
+    if (section.type === 'text') {
+      const saved = state.answers[key] || '';
+      html += `
+        <div class="text-card">
+          <div class="text-card-label">${section.label}</div>
+          <textarea data-key="${key}" placeholder="${section.placeholder}" oninput="autoGrow(this); saveAnswer(this)" onblur="saveAnswer(this)">${saved}</textarea>
+          <div class="text-card-saved" id="saved-${key}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg>
+            Saved
+          </div>
+        </div>
+      `;
+    }
+
+    if (section.type === 'checklist') {
+      const checked = state.answers[key] || [];
+      html += `<div class="checklist-block"><div class="checklist-label">${section.label}</div>`;
+      section.options.forEach((opt, oi) => {
+        const isChecked = checked.includes(oi);
+        html += `
+          <div class="checklist-option ${isChecked ? 'checked' : ''}" onclick="toggleCheck(this, '${key}', ${oi})">
+            <div class="check-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="check-label">${opt}</span>
+          </div>
+        `;
+      });
+      html += `</div>`;
+    }
+
+    if (section.type === 'quote') {
+      html += `
+        <div class="quote-card">
+          <span class="quote-marks">\u201C</span>
+          <p class="quote-text">${section.text}<span class="dot">.</span></p>
+        </div>
+      `;
+    }
+
+    if (section.type === 'quote-dark') {
+      html += `
+        <div class="quote-card dark">
+          <span class="quote-marks">\u201C</span>
+          <p class="quote-text">${section.text}</p>
+        </div>
+      `;
+    }
+
+    if (section.type === 'upsell') {
+      html += `
+        <div class="upsell-card">
+          <h3>The Resilience Reset<span class="dot" style="color:var(--accent)">.</span></h3>
+          <p>Turning each pillar into a practical system &mdash; 46 pages &mdash; Video Content.</p>
+          <button class="upsell-btn">
+            Learn More
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </button>
+        </div>
+      `;
+    }
+
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+
+  // Progress dots
+  const dotsEl = document.getElementById('progressDots');
+  dotsEl.innerHTML = MODULES.map((mod, i) => {
+    let cls = '';
+    if (state.completedModules.includes(mod.id)) cls = 'completed';
+    else if (mod.id === moduleId) cls = 'current';
+    return `<div class="progress-dot ${cls}"></div>`;
+  }).join('');
+
+  document.getElementById('progressLabel').textContent = `${moduleId}/9`;
+
+  // Continue button
+  const btn = document.getElementById('btnContinue');
+  if (moduleId === 9) {
+    btn.innerHTML = `Complete Course <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg>`;
+    btn.className = 'btn-continue accent';
+  } else {
+    btn.innerHTML = `Continue <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>`;
+    btn.className = 'btn-continue';
+  }
+
+  // Auto-grow textareas
+  setTimeout(() => {
+    container.querySelectorAll('textarea').forEach(ta => autoGrow(ta));
+  }, 100);
+}
+
+function renderWeekly() {
+  const container = document.getElementById('weeklyContent');
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  let html = `
+    <div class="module-header">
+      <div class="weekly-date">${dateStr}</div>
+      <h2 class="module-heading">Reflection check-in<span class="dot">.</span></h2>
+    </div>
+    <p class="module-body-text" style="margin-bottom:24px"><strong>Use weekly.</strong> What can you notice? What can you adapt instead of quitting?</p>
+
+    <div class="content-section">
+      <div class="text-card" style="margin-bottom:16px">
+        <div class="text-card-label">What worked this week?</div>
+        <textarea id="weekly-worked" placeholder="Celebrate the small wins\u2026" oninput="autoGrow(this)"></textarea>
+      </div>
+    </div>
+
+    <div class="content-section">
+      <div class="text-card" style="margin-bottom:16px">
+        <div class="text-card-label">What felt hard?</div>
+        <textarea id="weekly-hard" placeholder="No judgement\u2026" oninput="autoGrow(this)"></textarea>
+      </div>
+    </div>
+
+    <div class="content-section">
+      <div class="text-card" style="margin-bottom:16px">
+        <div class="text-card-label">What can I adapt instead of quitting?</div>
+        <textarea id="weekly-adapt" placeholder="One adjustment\u2026" oninput="autoGrow(this)"></textarea>
+      </div>
+    </div>
+
+    <div class="content-section">
+      <div class="quote-card">
+        <span class="quote-marks">\u201C</span>
+        <p class="quote-text">Doing something is better than doing nothing<span class="dot">.</span></p>
+      </div>
+    </div>
+  `;
+
+  // History
+  if (state.weeklyEntries.length > 0) {
+    html += `<div class="weekly-history"><p class="weekly-history-label">Previous entries</p>`;
+    state.weeklyEntries.slice().reverse().forEach(entry => {
+      html += `
+        <div class="history-entry">
+          <div class="history-entry-date">${entry.date}</div>
+          ${entry.worked ? `<p><strong>Worked:</strong> ${entry.worked}</p>` : ''}
+          ${entry.hard ? `<p><strong>Hard:</strong> ${entry.hard}</p>` : ''}
+          ${entry.adapt ? `<p><strong>Adapt:</strong> ${entry.adapt}</p>` : ''}
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+
+  container.innerHTML = html;
+  setTimeout(() => {
+    container.querySelectorAll('textarea').forEach(ta => autoGrow(ta));
+  }, 100);
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  // Scroll to top
+  const app = document.getElementById('app');
+  app.scrollTo(0, 0);
+  window.scrollTo(0, 0);
+}
+
+function goToDashboard() {
+  renderDashboard();
+  showScreen('screen-dashboard');
+}
+
+function openModule(moduleId) {
+  state.currentModule = moduleId;
+  renderModule(moduleId);
+  showScreen('screen-module');
+}
+
+function nextModule() {
+  const currentId = state.currentModule;
+  if (!state.completedModules.includes(currentId)) {
+    state.completedModules.push(currentId);
+    saveState();
+  }
+
+  if (currentId < 9) {
+    openModule(currentId + 1);
+  } else {
+    showToast('Course complete!');
+    goToDashboard();
+  }
+}
+
+function openWeekly() {
+  renderWeekly();
+  showScreen('screen-weekly');
+}
+
+function saveWeekly() {
+  const worked = document.getElementById('weekly-worked').value.trim();
+  const hard = document.getElementById('weekly-hard').value.trim();
+  const adapt = document.getElementById('weekly-adapt').value.trim();
+
+  if (worked || hard || adapt) {
+    const now = new Date();
+    state.weeklyEntries.push({
+      date: now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+      worked, hard, adapt
+    });
+    saveState();
+    showToast('Check-in saved');
+  }
+  goToDashboard();
+}
+
+// ═══════════════════════════════════════════
+// INTERACTIONS
+// ═══════════════════════════════════════════
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+function saveAnswer(el) {
+  const key = el.dataset.key;
+  state.answers[key] = el.value;
+  saveState();
+
+  // Show saved indicator
+  const indicator = document.getElementById('saved-' + key);
+  if (indicator) {
+    indicator.classList.add('show');
+    setTimeout(() => indicator.classList.remove('show'), 1500);
+  }
+}
+
+function toggleCheck(el, key, optionIndex) {
+  if (!state.answers[key]) state.answers[key] = [];
+  const arr = state.answers[key];
+  const idx = arr.indexOf(optionIndex);
+  if (idx > -1) {
+    arr.splice(idx, 1);
+    el.classList.remove('checked');
+  } else {
+    arr.push(optionIndex);
+    el.classList.add('checked');
+  }
+  state.answers[key] = arr;
+  saveState();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+loadState();
+renderDashboard();
+</script>
+
+</body>
+</html>
